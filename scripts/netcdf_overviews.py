@@ -11,25 +11,22 @@ from pathlib import Path
 
 import concurrent.futures
 
-path = sys.argv[1]
-# overall_vrt = sys.argv[2]
-
 COLOURS = 'blue green red nir swir1 swir2'.split()
-
-print("Building viewable VRTs")
-for filename in tqdm(glob('{}/**/*.nc'.format(path), recursive=True)):
-    vrt_name = filename.replace('.nc', '.vrt')
-    vrt_path = Path(vrt_name)
-    vrt_outdated = Path(filename).stat().st_mtime > vrt_path.stat().st_mtime
-
-    if not vrt_path.exists() or vrt_outdated:
-        input_layers = ['NETCDF:{}:{}'.format(filename, colour) for colour in COLOURS]
-        subprocess.run(['gdalbuildvrt', '-separate', vrt_name] + input_layers, check=True, stdout=subprocess.DEVNULL)
+MAX_WORKERS = 8
 
 
-print("Building VRT overviews")
-# for filename in tqdm(glob('{}/**/*.vrt'.format(path), recursive=True)):
-#     subprocess.run(['gdaladdo', '-ro', filename, '2', '4', '8', '16'])
+def build_netcdf_vrts(pattern):
+    print("Building viewable VRTs")
+    vrts = []
+    for filename in tqdm(glob(pattern, recursive=True)):
+        vrt_name = filename.replace('.nc', '.vrt')
+        vrt_path = Path(vrt_name)
+        vrts.append(vrt_name)
+
+        if not vrt_path.exists() or Path(filename).stat().st_mtime > vrt_path.stat().st_mtime:
+            input_layers = ['NETCDF:{}:{}'.format(filename, colour) for colour in COLOURS]
+            subprocess.run(['gdalbuildvrt', '-separate', vrt_name] + input_layers, check=True, stdout=subprocess.DEVNULL)
+    return vrts
 
 
 def build_overview(filename, levels=None):
@@ -37,11 +34,37 @@ def build_overview(filename, levels=None):
         levels = ['2', '4', '8', '16']
     return subprocess.run(['gdaladdo', '-ro', filename] + levels, check=True, stdout=subprocess.DEVNULL)
 
-with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
-    vrt_filenames = glob('{}/**/*.vrt'.format(path), recursive=True)
-    num_files = len(vrt_filenames)
-    results = executor.map(build_overview, vrt_filenames)
 
-    completed = [done for done in tqdm(results, total=num_files)]
+def build_overviews(tile_files):
+    print("Building Tiles overviews")
+    with concurrent.futures.ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        num_files = len(tile_files)
+        results = executor.map(build_overview, tile_files)
+
+        completed = [done for done in tqdm(results, total=num_files)]
 
 
+def mosaic_vrt(output_name, filenames):
+    levels = ['32', '64', '128']
+    print('Building VRT Mosaic')
+    subprocess.run(['gdalbuildvrt', output_name] + filenames, check=True)
+    print('Building Mosaic Overviews')
+    subprocess.run(['gdaladdo', '--config', 'COMPRESS_OVERVIEW', 'DEFLATE', output_name] + levels, check=True)
+
+
+def main():
+    pattern = sys.argv[1]
+
+    if pattern[-2:] == 'nc':
+        tile_files = build_netcdf_vrts(pattern)
+    else:
+        tile_files = list(glob(pattern, recursive=True))
+
+    build_overviews(tile_files)
+
+    output_name = sys.argv[2]
+    mosaic_vrt(output_name, tile_files)
+
+
+if __name__ == '__main__':
+    main()

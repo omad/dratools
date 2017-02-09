@@ -1,8 +1,17 @@
+#!/bin/env python
 # coding=utf-8
 """
 Ingest data from the command-line.
 
-python utils/bom_rainfall_prepare.py --output rainfall.yaml /g/data/rr5/agcd/0_05/rainfall/daily/*/*
+' '.join(['{}_{}'.format(x, y) for x in range(138, 140+1) for y in range(-31, -33-1, -1)])
+
+138_-31 138_-32 138_-33 139_-31 139_-32 139_-33 140_-31 140_-32 140_-33
+
+for i in  138_-031 138_-032 138_-033 139_-031 139_-032 139_-033 140_-031 140_-032 140_-033
+do
+    oldwofs_prepare.py --output oldwofs_${i}.yaml /g/data/fk4/wofs/current/extents/${i}/*.tif
+done
+
 """
 from __future__ import absolute_import
 
@@ -19,6 +28,10 @@ from pathlib import Path
 
 
 def prepare_datasets_netcdf(nc_file):
+    """
+    Don't use this, turns out the old WOfS netcdfs are of an 'alternative' structure, and can't be opened
+    by GDAL/rasterio.
+    """
     image = netCDF4.Dataset(nc_file)
     times = image['time']
 

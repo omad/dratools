@@ -21,10 +21,11 @@ import click
 import netCDF4
 import rasterio
 import yaml
+from yaml import CDumper
 from datetime import datetime
 import re
-from tqdm import tqdm
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed, ProcessPoolExecutor
 
 
 def prepare_datasets_netcdf(nc_file):
@@ -154,13 +155,16 @@ def prepare_datasets_geotiff(geotiff_file):
               type=click.Path(exists=False, writable=True))
 def main(datasets, output):
     with open(output, 'w') as stream:
-        output_datasets = (prepare_datasets_geotiff(dataset)
-                           for dataset in datasets)
 
-        with click.progressbar(output_datasets,
-                               length=len(datasets),
-                               label='Loading datasets') as progress_bar_datasets:
-            yaml.dump_all(progress_bar_datasets, stream)
+        with ProcessPoolExecutor(max_workers=4) as executor:
+            output_datasets = executor.map(prepare_datasets_geotiff, datasets)
+            # output_datasets = (executor.submit(prepare_datasets_geotiff, dataset)
+            #                    for dataset in datasets)
+
+            with click.progressbar(output_datasets,
+                                   length=len(datasets),
+                                   label='Loading datasets') as progress_bar_datasets:
+                    yaml.dump_all(progress_bar_datasets, stream, Dumper=CDumper)
 
 
 if __name__ == "__main__":

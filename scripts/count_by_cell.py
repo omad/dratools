@@ -16,6 +16,7 @@ logger.debug('starting count.')
 
 dc = Datacube()
 
+logger.debug(dc)
 # print(dc.list_products())
 
 
@@ -24,10 +25,10 @@ product = 'ls7_fc_albers'
 
 gw = GridWorkflow(index=dc.index, product=product)
 
-foo = gw.cell_observations(time=('1999-01-01', '2001-01-01'), product=product)
+foo = gw.cell_observations(time=('2010-01-01', '2012-01-01'), product=product)
 
 for k, v in foo.items():
-    print(k, len(v['datasets'])) # v dict also contains 'geobox'
+    print(k, len(v['datasets']))  # v dict also contains 'geobox'
 
 
 logger.debug('counting done.')

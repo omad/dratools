@@ -15,10 +15,12 @@ def check_files(src_datasets):
 
     return broken_files
 
+
 def check_from_file(filename):
     with open(filename) as f:
         src_datasets = [src_dataset.strip() for src_dataset in f]
     return src_datasets
+
 
 def check_dirs(grid_cells):
     to_check = []

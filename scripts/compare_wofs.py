@@ -4,12 +4,8 @@ import sys
 sys.path.append('/g/data/v10/public/modules/agdc-py3/1.1.17/lib/python3.5/site-packages')
 
 from datacube import Datacube
-from netCDF4 import Dataset
-from matplotlib import pyplot as plt
 import xarray as xr
-import numpy as np
 import pandas as pd
-from datacube.storage.masking import mask_valid_data as mask_invalid_data
 import os
 
 os.environ['GDAL_DATA'] = '/g/data/v10/public/modules/agdc-py3-env/20161201/envs/agdc/share/gdal'

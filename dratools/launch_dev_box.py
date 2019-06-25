@@ -24,6 +24,7 @@ def main():
         launch_putty_session(PUTTY_SESSION)
     else:
         print(instance.state)
+        instance.start()
         instance.wait_until_running()
         print(instance.public_dns_name)
         set_putty_host_name(PUTTY_SESSION, instance.public_dns_name)

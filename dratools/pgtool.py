@@ -1,5 +1,6 @@
 import click
 import psycopg2
+from prompt_toolkit import prompt
 from prompt_toolkit.history import InMemoryHistory
 
 
@@ -35,11 +36,11 @@ def cli(**kwargs):
 
     cur.callproc('dratools.execute_command', ['hostname --fqdn'])
     hostname, = cur.fetchone()
-    prompt = f'{role}@{hostname} $ '
+    PS1 = f'{role}@{hostname} $ '
 
     while True:
         try:
-            command = input(prompt)
+            command = prompt(PS1, history=history)
         except KeyboardInterrupt:
             continue
         except EOFError:

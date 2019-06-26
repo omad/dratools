@@ -1,8 +1,17 @@
+from os.path import normpath, join
+from pathlib import PurePosixPath as Path
+
 import click
 import psycopg2
-from prompt_toolkit import prompt
-from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import WordCompleter
 
+
+class PgShell:
+
+    def __init__(self, pgcursor):
+        self.pgcursor = pgcursor
+        self.currdir = None
 
 @click.command()
 @click.option('host', '-h', envvar='PGHOST', default='localhost')
@@ -21,7 +30,7 @@ def cli(**kwargs):
 
     cur = conn.cursor()
 
-    history = InMemoryHistory()
+    session = PromptSession()
 
     # Setup Database
     cur.execute('CREATE SCHEMA IF NOT EXISTS dratools;')
@@ -30,27 +39,52 @@ def cli(**kwargs):
         create_execute_command_function = fin.read()
     cur.execute(create_execute_command_function)
 
+    cur.callproc('dratools.execute_command', ['pwd'])
+    currdir, = cur.fetchone()
+
     # Make Prompt
     cur.execute('SELECT current_role, inet_server_addr();')
     role, server_addr = cur.fetchone()
 
     cur.callproc('dratools.execute_command', ['hostname --fqdn'])
     hostname, = cur.fetchone()
-    PS1 = f'{role}@{hostname} $ '
+    PS1 = f'{role}@{hostname}:{currdir} $ '
+
+
+    cur.callproc('dratools.execute_command', ['ls'])
+    filelist = cur.fetchall()
+    completer = WordCompleter(list(name[0] for name in filelist))
 
     while True:
         try:
-            command = prompt(PS1, history=history)
+            command = session.prompt(PS1, completer=completer, complete_while_typing=False)
         except KeyboardInterrupt:
             continue
         except EOFError:
             break
         else:
-            cur.callproc('dratools.execute_command', [command])
+            if command.startswith('cd'):
+                newdir = command.split()[1]
+                if newdir.startswith('/'):
+                    # absolute path, no joining necessary
+                    pass
+                else:
+                    newdir = Path(currdir).joinpath(newdir)
 
-            results = cur.fetchall()
-            for row in results:
-                print(row[0])
+                cur.callproc('dratools.execute_command', [f'cd {newdir}; pwd'])
+                currdir, = cur.fetchone()
+
+                cur.callproc('dratools.execute_command', [f'cd {currdir}; ls'])
+                filelist = cur.fetchall()
+                completer = WordCompleter(list(name[0] for name in filelist))
+
+                PS1 = f'{role}@{hostname}:{currdir} $ '
+            else:
+                cur.callproc('dratools.execute_command', [f'cd {currdir}; ' + command])
+
+                results = cur.fetchall()
+                for row in results:
+                    print(row[0])
 
     cur.close()
     conn.close()

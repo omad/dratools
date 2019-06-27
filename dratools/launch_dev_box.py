@@ -1,4 +1,6 @@
+import socket
 import winreg
+from contextlib import closing
 
 import boto3
 import click
@@ -28,6 +30,7 @@ def main():
         instance.wait_until_running()
         print(instance.public_dns_name)
         set_putty_host_name(PUTTY_SESSION, instance.public_dns_name)
+        wait_for_open_port(instance.public_dns_name, port=22, timeout=30)
         launch_putty_session(PUTTY_SESSION)
 
 
@@ -40,6 +43,15 @@ def set_putty_host_name(session, new_hostname):
 def launch_putty_session(session):
     import subprocess
     subprocess.Popen(['putty.exe', '-load', session], creationflags=subprocess.CREATE_NEW_CONSOLE)
+
+
+def wait_for_open_port(host, port, timeout=2):
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+        sock.settimeout(timeout)
+        if sock.connect_ex((host, port)) == 0:
+            return
+        else:
+            raise Exception("Cannot connect")
 
 
 if __name__ == '__main__':

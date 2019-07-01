@@ -21,7 +21,7 @@ def main():
     instance = ec2.Instance(instance_id)
 
     if instance.state['Name'] == 'running':
-        print('Dev Box Already Running. Launching Putty')
+        print(f'Dev Box Already Running at {instance.public_dns_name}. Launching Putty')
         set_putty_host_name(PUTTY_SESSION, instance.public_dns_name)
         launch_putty_session(PUTTY_SESSION)
     else:

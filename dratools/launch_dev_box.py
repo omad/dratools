@@ -1,17 +1,22 @@
 import socket
 import winreg
-from contextlib import closing
+from time import sleep
 
 import boto3
 import click
 
 INSTANCE_NAME = '*dra*'
 PUTTY_KEY = r'Software\SimonTatham\PuTTY\Sessions'
+PUTTY_KEY = r'Software\Microsoft\AppV\Client\Packages\5AE56FD3-EBB7-437C-93FA-3B1247A40DBB\REGISTRY\USER\S-1-5-21-10245634-2577594509-1919486750-9548\Software\SimonTatham\PuTTY\Sessions'
 PUTTY_SESSION = 'aws-dev-box'
 
 
 @click.command()
 def main():
+    launch_dev_box()
+
+
+def launch_dev_box():
     client = boto3.client('ec2')
     hosts = client.describe_instances(Filters=[{'Name': 'tag:Name', 'Values': [INSTANCE_NAME]}])
 
@@ -45,13 +50,17 @@ def launch_putty_session(session):
     subprocess.Popen(['putty.exe', '-load', session], creationflags=subprocess.CREATE_NEW_CONSOLE)
 
 
-def wait_for_open_port(host, port, timeout=2):
-    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
-        sock.settimeout(timeout)
-        if sock.connect_ex((host, port)) == 0:
-            return
-        else:
-            raise Exception("Cannot connect")
+def wait_for_open_port(host, port, timeout=2, retries=5):
+    for _ in range(retries):
+        try:
+            with socket.create_connection((host, port)) as sock:
+                if sock:
+                    return True
+        except Exception as e:
+            print(e)
+        sleep(5)
+
+    raise Exception("Cannot connect")
 
 
 if __name__ == '__main__':

@@ -10,11 +10,26 @@ from io import BytesIO
 
 from flask import Flask, request, send_file
 from jaraco import clipboard
+from ahk import AHK
 
 webbrowser.register('firefox', None,
                     instance=webbrowser.BackgroundBrowser(r"C:\Program Files (x86)\Mozilla Firefox\firefox.exe"))
 
 app = Flask(__name__)
+
+def get_current_page():
+    import time
+    ahk = AHK(executable_path=r'C:\Users\u68320\AutoHotkey_1.1.30.01\AutoHotkeyU64.exe')
+    win = ahk.find_window(lambda w: b'Google Chrome' in w.title)
+    win.send('^l')
+    time.sleep(0.2)
+    win.send('^c')
+    time.sleep(0.1)
+    from jaraco.clipboard import paste_text
+    url = paste_text()
+    title = win.title.decode('utf8')
+    return url, title
+
 
 
 @app.route("/openurl", methods=['POST'])

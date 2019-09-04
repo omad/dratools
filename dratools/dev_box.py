@@ -13,17 +13,11 @@ PUTTY_SESSION = 'aws-dev-box'
 
 @click.command()
 def main():
-    launch_dev_box()
+    launch()
 
 
-def launch_dev_box():
-    client = boto3.client('ec2')
-    hosts = client.describe_instances(Filters=[{'Name': 'tag:Name', 'Values': [INSTANCE_NAME]}])
-
-    instance_id = hosts['Reservations'][0]['Instances'][0]['InstanceId']
-
-    ec2 = boto3.resource('ec2')
-    instance = ec2.Instance(instance_id)
+def launch():
+    instance = get_instance()
 
     if instance.state['Name'] == 'running':
         print(f'Dev Box Already Running at {instance.public_dns_name}. Launching Putty')
@@ -37,6 +31,21 @@ def launch_dev_box():
         set_putty_host_name(PUTTY_SESSION, instance.public_dns_name)
         wait_for_open_port(instance.public_dns_name, port=22, timeout=30)
         launch_putty_session(PUTTY_SESSION)
+
+
+def get_instance():
+    client = boto3.client('ec2')
+    hosts = client.describe_instances(Filters=[{'Name': 'tag:Name', 'Values': [INSTANCE_NAME]}])
+    instance_id = hosts['Reservations'][0]['Instances'][0]['InstanceId']
+    ec2 = boto3.resource('ec2')
+    instance = ec2.Instance(instance_id)
+    return instance
+
+
+def get_hostname():
+    instance = get_instance()
+    if instance.state['Name'] == 'running':
+        return instance.public_dns_name
 
 
 def set_putty_host_name(session, new_hostname):

@@ -36,7 +36,7 @@ def get_current_page():
 def openurl():
     url = request.form['url']
     webbrowser.get('firefox').open(url)
-    return "tried to launch firefox"
+    return f"tried to launch firefox with {url}\n"
 
 
 @app.route("/copyhtml", methods=['POST'])

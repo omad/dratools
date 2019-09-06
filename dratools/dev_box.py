@@ -1,5 +1,10 @@
 import socket
-import winreg
+try:
+    import winreg
+    IS_WINDOWS = True
+except ImportError:
+    IS_WINDOWS = False
+    print('Not running on windows, some funcs will fail')
 from time import sleep
 
 import boto3
@@ -21,16 +26,20 @@ def launch():
 
     if instance.state['Name'] == 'running':
         print(f'Dev Box Already Running at {instance.public_dns_name}. Launching Putty')
-        set_putty_host_name(PUTTY_SESSION, instance.public_dns_name)
-        launch_putty_session(PUTTY_SESSION)
     else:
         print(instance.state)
         instance.start()
         instance.wait_until_running()
         print(instance.public_dns_name)
-        set_putty_host_name(PUTTY_SESSION, instance.public_dns_name)
         wait_for_open_port(instance.public_dns_name, port=22, timeout=30)
+
+    if IS_WINDOWS:
+        set_putty_host_name(PUTTY_SESSION, instance.public_dns_name)
         launch_putty_session(PUTTY_SESSION)
+    else:
+        import os
+        os.execlp("ssh", "ssh", instance.public_dns_name)
+
 
 
 def get_instance():

@@ -1,0 +1,8 @@
+boto3
+click
+prompt_toolkit
+psycopg2
+flask
+infi.systray
+jaraco.clipboard
+ahk

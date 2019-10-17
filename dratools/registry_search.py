@@ -15,5 +15,5 @@ def subkeys(hkey=HKEY_CURRENT_USER, path='', accum=''):
 
 
 for path in subkeys():
-    if 'raijin' in path:
+    if 'aws-dev-box' in path:
         print(path)

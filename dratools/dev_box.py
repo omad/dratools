@@ -10,9 +10,9 @@ from time import sleep
 import boto3
 import click
 
-INSTANCE_NAME = '*dra*'
+INSTANCE_NAME = 'dra-new-dev-box'
 PUTTY_KEY = r'Software\SimonTatham\PuTTY\Sessions'
-PUTTY_KEY = r'Software\Microsoft\AppV\Client\Packages\5AE56FD3-EBB7-437C-93FA-3B1247A40DBB\REGISTRY\USER\S-1-5-21-10245634-2577594509-1919486750-9548\Software\SimonTatham\PuTTY\Sessions'
+# PUTTY_KEY = r'Software\Microsoft\AppV\Client\Packages\5AE56FD3-EBB7-437C-93FA-3B1247A40DBB\REGISTRY\USER\S-1-5-21-10245634-2577594509-1919486750-9548\Software\SimonTatham\PuTTY\Sessions'
 PUTTY_SESSION = 'aws-dev-box'
 
 

@@ -1,8 +1,8 @@
+from functools import partial
 from infi.systray import SysTrayIcon
 from jaraco import clipboard
 
 from dratools import dev_box
-from dratools.dev_box import launch
 
 hover_text = "SysTrayIcon Demo"
 
@@ -23,8 +23,8 @@ def do_nothing(sysTrayIcon):
     pass
 
 
-def do_launch_dev_box(sysTrayIcon):
-    launch()
+def do_launch_dev_box(sysTrayIcon, name):
+    dev_box.launch(name)
 
 
 def copy_dev_box_hostname(sysTrayIcon):
@@ -33,8 +33,10 @@ def copy_dev_box_hostname(sysTrayIcon):
         clipboard.copy_text(hostname)
 
 
-menu_options = (('Launch Dev Box', "hello.ico", do_launch_dev_box),
-                ('Copy dev box host', None, copy_dev_box_hostname),
+menu_options = (('Launch Nix Box', "hello.ico", partial(do_launch_dev_box, name='nixos')),
+                ('Launch Ubuntu Box', "hello.ico", partial(do_launch_dev_box, name='ubuntu')),
+                ('Copy Nix Box hostname', None, partial(copy_dev_box_hostname, name='nixos')),
+                ('Copy Ubuntu Box hostname', None, partial(copy_dev_box_hostname, name='ubuntu')),
                 ('Do nothing', None, do_nothing),
                 ('A sub-menu', "submenu.ico", (('Say Hello to Simon', "simon.ico", simon),
                                                ('Do nothing', None, do_nothing),

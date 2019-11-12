@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "dratools"
+version = "0.1.0"
+description = "Custom Damien Tools"
+authors = ["Damien Ayers <damien@omad.net>"]
+license = "Apache-2.0"
+include = ["dratools/execute_command.sql"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+click = "^7.0"
+psycopg2 = "^2.8.4"
+prompt_toolkit = "^2.0.10"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2.2"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+
+[tool.poetry.scripts]
+pgtool = 'dratools.pgtool:cli'

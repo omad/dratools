@@ -1,5 +1,7 @@
+import importlib.resources
 from os.path import normpath, join
 from pathlib import PurePosixPath as Path
+from pathlib import Path as NativePath
 
 import click
 import psycopg2
@@ -35,8 +37,13 @@ def cli(**kwargs):
     # Setup Database
     cur.execute('CREATE SCHEMA IF NOT EXISTS dratools;')
     cur.execute('SET search_path TO dratools;')
-    with open('execute_command.sql') as fin:
-        create_execute_command_function = fin.read()
+
+    try:
+        create_execute_command_function = importlib.resources.read_text('dratools', 'execute_command.sql')
+    except FileNotFoundError:
+        create_execute_command_function = NativePath(__file__).parent.joinpath('execute_command.sql').read_text()
+
+
     cur.execute(create_execute_command_function)
 
     cur.callproc('dratools.execute_command', ['pwd'])

@@ -6,3 +6,4 @@ flask
 infi.systray
 jaraco.clipboard
 ahk
+Pillow

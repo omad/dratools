@@ -6,4 +6,6 @@ flask
 infi.systray
 jaraco.clipboard
 ahk
+typer
+PyGithub
 Pillow

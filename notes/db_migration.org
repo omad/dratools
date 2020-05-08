@@ -1,0 +1,69 @@
+#+TITLE: NCI Database Migration
+
+
+* Introduction
+
+
+
+* Snippets
+
+** Pulling Data across a `postgres_fdw` link
+
+
+#+BEGIN_SRC sql
+
+create extension postgres_fdw;
+create server collection2 foreign data wrapper postgres_fdw options (dbname 'datacube');
+create user mapping for dra547 server collection2 options (user 'dra547');
+CREATE SCHEMA old_collection;
+
+DROP USER MAPPING FOR dra547;
+DROP USER MAPPING FOR CURRENT_USER SERVER collection2;
+DROP USER MAPPING IF EXISTS FOR CURRENT_USER SERVER collection2;
+DROP SERVER IF EXISTS collection2;
+
+    
+CREATE SERVER collection2 FOREIGN DATA WRAPPER postgres_fdw OPTIONS (dbname 'datacube', host 'localhost');
+CREATE USER MAPPING FOR dra547 SERVER collection2 OPTIONS (user 'dra547', password 'xxxxxxxxx');
+IMPORT FOREIGN SCHEMA agdc FROM SERVER collection2 INTO old_collection;
+IMPORT FOREIGN SCHEMA agdc
+    LIMIT TO (dataset, dataset_location, dataset_source, dataset_type, metadata_type)
+    FROM SERVER collection2 INTO old_collection;
+
+#+END_SRC
+
+** Using PostGIS for ODC Datasets
+
+#+BEGIN_SRC sql
+
+CREATE TABLE geom_datasets
+(
+    id               uuid PRIMARY KEY,
+    dataset_type_ref smallint,
+    geom             geography(POLYGON, 4326),
+    archived         timestamp with time zone,
+    added            timestamp with time zone,
+    added_by         name
+);
+
+INSERT INTO geom_datasets
+select id, dataset_type_ref,
+               ST_Transform(
+                       ST_SetSRID(
+                               ST_GeomFromGeoJSON(metadata #> '{grid_spatial,projection,valid_data}'),
+                               3577),
+                       4326) as geom,
+       archived, added, added_by
+from old_collection.dataset
+WHERE dataset_type_ref = (select id from old_collection.dataset_type where name = 'ls8_nbar_albers');
+
+select id, (metadata#>'{grid_spatial,projection}')::jsonb - 'valid_data' - 'geo_ref_points'
+from old_collection.dataset
+WHERE dataset_type_ref = (select id from old_collection.dataset_type where name = 'ls8_nbar_scene')
+limit 4;
+
+select distinct (metadata#>'{grid_spatial,projection}')::jsonb - 'valid_data' - 'geo_ref_points'
+from old_collection.dataset
+WHERE dataset_type_ref = (select id from old_collection.dataset_type where name = 'ls8_nbar_scene');
+
+#+END_SRC

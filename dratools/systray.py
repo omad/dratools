@@ -3,6 +3,7 @@ from infi.systray import SysTrayIcon
 from jaraco import clipboard
 
 from dratools import dev_box
+from dratools.remote_utils_server import app
 
 hover_text = "SysTrayIcon Demo"
 
@@ -33,21 +34,23 @@ def copy_dev_box_hostname(sysTrayIcon):
         clipboard.copy_text(hostname)
 
 
-menu_options = (('Launch Nix Box', "hello.ico", partial(do_launch_dev_box, name='nixos')),
-                ('Launch Ubuntu Box', "hello.ico", partial(do_launch_dev_box, name='ubuntu')),
-                ('Copy Nix Box hostname', None, partial(copy_dev_box_hostname, name='nixos')),
-                ('Copy Ubuntu Box hostname', None, partial(copy_dev_box_hostname, name='ubuntu')),
-                ('Do nothing', None, do_nothing),
-                ('A sub-menu', "submenu.ico", (('Say Hello to Simon', "simon.ico", simon),
-                                               ('Do nothing', None, do_nothing),
-                                               ))
-                )
-sysTrayIcon = SysTrayIcon("main.ico", hover_text, menu_options, on_quit=bye, default_menu_index=1)
-sysTrayIcon.start()
-print("started systray")
+def main():
+    menu_options = (('Launch Nix Box', "hello.ico", partial(do_launch_dev_box, name='nixos')),
+                    ('Launch Ubuntu Box', "hello.ico", partial(do_launch_dev_box, name='ubuntu')),
+                    ('Copy Nix Box hostname', None, partial(copy_dev_box_hostname, name='nixos')),
+                    ('Copy Ubuntu Box hostname', None, partial(copy_dev_box_hostname, name='ubuntu')),
+                    ('Do nothing', None, do_nothing),
+                    ('A sub-menu', "submenu.ico", (('Say Hello to Simon', "simon.ico", simon),
+                                                   ('Do nothing', None, do_nothing),
+                                                   ))
+                    )
+    sysTrayIcon = SysTrayIcon("main.ico", hover_text, menu_options, on_quit=bye, default_menu_index=1)
+    sysTrayIcon.start()
+    print("started systray")
 
-from dratools.remote_utils_server import app
+    app.run(port=9999)
 
-app.run(port=9999)
+    print("started flask")
 
-print("started flask")
+if __name__ == '__main__':
+    main()

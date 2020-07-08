@@ -21,3 +21,4 @@ build-backend = "poetry.masonry.api"
 
 [tool.poetry.scripts]
 pgtool = 'dratools.pgtool:cli'
+dra-systray = 'dratools.systray:main'

@@ -1,11 +1,12 @@
-{ lib, buildPythonPackage, cmake, ninja, python39Packages } :
+{ lib, pythonPackages, cmake, ninja } :
 
+with pythonPackages;
 buildPythonPackage rec {
   pname = "TheengsGateway";
   version = "0.2.0";
   format = "pyproject";
 
-  src = python39Packages.fetchPypi {
+  src = fetchPypi {
     inherit pname version;
     sha256 = "sha256-TjQzlXweLL5N0effNUpayxRhVlKoFDw1R5RIb2vuVpI=";
   };
@@ -13,13 +14,13 @@ buildPythonPackage rec {
   nativeBuildInputs = [ 
     cmake 
     ninja
-    python39Packages.scikit-build
+    scikit-build
   ];
 
   # setup.py will always (re-)execute cmake in buildPhase
   dontConfigure = true;
 
-  propagatedBuildInputs = with python39Packages; [
+  propagatedBuildInputs = [
     paho-mqtt
     bleak
   ];

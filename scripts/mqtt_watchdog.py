@@ -17,8 +17,8 @@ MQTT_PASS = sys.argv[3]
 
 def reboot():
     logging.warning("Restarting Bluetooth and Theengs")
-    run("bluetoothctl off".split())
-    run("bluetoothctl on".split())
+    run("bluetoothctl power off".split())
+    run("bluetoothctl power on".split())
     run("systemctl restart theengs-gateway.service".split())
 
 def on_connect(client, userdata, flags, rc):

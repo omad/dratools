@@ -4,7 +4,7 @@ MQTT BLE Watchdog will reboot my Raspberry Pi zero if/when BLE shits itself.
 
 import paho.mqtt.client as mqtt
 from threading import Timer
-from subprocess import run
+from subprocess import run, CalledProcessError
 import logging
 import sys
 
@@ -21,7 +21,7 @@ def reboot():
         run("bluetoothctl power off".split(), check=True)
         run("bluetoothctl power on".split(), check=True)
         run("systemctl restart theengs-gateway.service".split(), check=True)
-    except CalledProcessError cpe:
+    except CalledProcessError:
         logging.exception('Failed to reset bluetooth stack, restarting')
         run("reboot")
 

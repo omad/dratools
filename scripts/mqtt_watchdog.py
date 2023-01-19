@@ -17,9 +17,14 @@ MQTT_PASS = sys.argv[3]
 
 def reboot():
     logging.warning("Restarting Bluetooth and Theengs")
-    run("bluetoothctl power off".split())
-    run("bluetoothctl power on".split())
-    run("systemctl restart theengs-gateway.service".split())
+    try:
+        run("bluetoothctl power off".split(), check=True)
+        run("bluetoothctl power on".split(), check=True)
+        run("systemctl restart theengs-gateway.service".split(), check=True)
+    except CalledProcessError cpe:
+        logging.exception('Failed to reset bluetooth stack, restarting')
+        run("reboot")
+
 
 def on_connect(client, userdata, flags, rc):
     logging.info("Connected with result code "+str(rc))
